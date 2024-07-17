@@ -20,21 +20,39 @@ const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws: IWebSocket) => {
     ws.on('message', (message) => {
-        const user = JSON.parse(message.toString()) 
-        ws.username = user.nameUser;
+        const data = JSON.parse(message.toString())
+        if (data.nameUser) {
+            ws.username = data.nameUser;
+            custom.NewUser(
+                customText.bold + customText.colors.cyan + ' | ' + customText.end +
+                customText.colors.magenta + 'Usuario conectado: ' +
+                customText.bold + customText.colors.blanco + ws.username + customText.end +
+                customText.bold + customText.colors.cyan + ' | ' + customText.end
+            );
+        };
 
-        custom.NewUser(
-            customText.bold + customText.colors.cyan + ' | ' + customText.end +
-            customText.colors.magenta + 'Usuario conectado: ' +
-            customText.bold + customText.colors.blanco + ws.username + customText.end +
-            customText.bold + customText.colors.cyan + ' | ' + customText.end
-        );
+        switch (data.event) {
+            case "Trigger":
+                custom.Success(
+                    customText.bold + customText.colors.cyan + ' | ' + customText.end +
+                    customText.bold + customText.colors.blanco + 'Evento: ' + customText.end +
+                    customText.colors.blanco + data.event + customText.end,
+                    customText.bold + customText.colors.blanco + 'Usuario: ' + customText.end +
+                    customText.colors.blanco + data.user + customText.end,
+                    customText.bold + customText.colors.blanco + 'Rol: ' + customText.end +
+                    customText.colors.blanco + data.role + customText.end,
+                    customText.bold + customText.colors.blanco + 'Dispositivo: ' + customText.end +
+                    customText.colors.blanco + data.triggerDevice.nameDevice + customText.end,
+                    customText.bold + customText.colors.cyan + ' | ' + customText.end
+                );
+                break;
+            case 'getDevices':
+                
+                break;
+            default:
+                break;
+        }
 
-        custom.Success(
-            customText.bold + customText.colors.cyan + ' | ' + customText.end +
-            customText.colors.blanco + message + customText.end +
-            customText.bold + customText.colors.cyan + ' | ' + customText.end
-        )
     });
 
     ws.on('close', () => {
