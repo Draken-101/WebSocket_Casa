@@ -1,8 +1,8 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-import * as https from 'https';
+import * as http from 'http';
 import { custom, customText } from '../Services/customSignale';
+
 dotenv.config();
 
 const PORT = process.env.PORT || 8000;
@@ -11,25 +11,16 @@ interface IWebSocket extends WebSocket {
     username: string;
 }
 
-const server = https.createServer({
-    cert: fs.readFileSync('./src//certificates/cert.pem'),
-    key: fs.readFileSync('./src/certificates/key.pem')
-})
+const server = http.createServer(); // Cambiar de https a http
 
 const wss = new WebSocketServer({ server });
 
+const clients: Set<IWebSocket> = new Set();
+
 wss.on('connection', (ws: IWebSocket) => {
+    clients.add(ws);
     ws.on('message', (message) => {
-        const data = JSON.parse(message.toString())
-        if (data.nameUser) {
-            ws.username = data.nameUser;
-            custom.NewUser(
-                customText.bold + customText.colors.cyan + ' | ' + customText.end +
-                customText.colors.magenta + 'Usuario conectado: ' +
-                customText.bold + customText.colors.blanco + ws.username + customText.end +
-                customText.bold + customText.colors.cyan + ' | ' + customText.end
-            );
-        };
+        const data = JSON.parse(message.toString());
 
         switch (data.event) {
             case "Trigger":
@@ -45,14 +36,30 @@ wss.on('connection', (ws: IWebSocket) => {
                     customText.colors.blanco + data.triggerDevice.nameDevice + customText.end,
                     customText.bold + customText.colors.cyan + ' | ' + customText.end
                 );
-                break;
-            case 'getDevices':
-                
+                try {
+
+                    clients.forEach(client => {
+                        if (client.username != ws.username && client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify(data.triggerDevice));
+                        }
+                    })
+                } catch (error) {
+                    console.log(error);
+                }
                 break;
             default:
+                if (data.nameUser) {
+                    ws.username = data.nameUser;
+                    custom.NewUser(
+                        customText.bold + customText.colors.cyan + ' | ' + customText.end +
+                        customText.colors.magenta + 'Usuario conectado: ' +
+                        customText.bold + customText.colors.blanco + ws.username + customText.end +
+                        customText.bold + customText.colors.cyan + ' | ' + customText.end
+                    );
+
+                }
                 break;
         }
-
     });
 
     ws.on('close', () => {
@@ -65,13 +72,12 @@ wss.on('connection', (ws: IWebSocket) => {
     });
 });
 
-
 server.listen(PORT, () => {
     console.clear();
     custom.Success(
         customText.bold + customText.colors.cyan + '| ' + customText.end +
-        customText.colors.magenta + 'Servidor corriendose en el puerto: ' +
+        customText.colors.magenta + 'Servidor corriendo en el puerto: ' +
         customText.bold + customText.colors.blanco + PORT + customText.end +
         customText.bold + customText.colors.cyan + ' |' + customText.end
-    )
-})
+    );
+});
