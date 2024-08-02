@@ -40,7 +40,49 @@ wss.on('connection', (ws: IWebSocket) => {
 
                     clients.forEach(client => {
                         if (client.username != ws.username && client.readyState === WebSocket.OPEN) {
-                            client.send(JSON.stringify(data.triggerDevice));
+                            client.send(JSON.stringify({ event: data.event  , triggerDevice: data.triggerDevice }));
+                        }
+                    })
+                } catch (error) {
+                    console.log(error);
+                }
+                break;
+            case "newAction":
+                custom.Success(
+                    customText.bold + customText.colors.cyan + ' | ' + customText.end +
+                    customText.bold + customText.colors.blanco + 'Evento: ' + customText.end +
+                    customText.colors.blanco + data.event + customText.end,
+                    customText.bold + customText.colors.blanco + 'Usuario: ' + customText.end +
+                    customText.colors.blanco + data.data.user + customText.end,
+                    customText.bold + customText.colors.blanco + 'Rol: ' + customText.end +
+                    customText.colors.blanco + data.data.role + customText.end,
+                    customText.bold + customText.colors.blanco + 'Dispositivo: ' + customText.end +
+                    customText.colors.blanco + data.data.device + customText.end,
+                    customText.bold + customText.colors.cyan + ' | ' + customText.end
+                );
+                try {
+
+                    clients.forEach(client => {
+                        if (client.username != ws.username && client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify(data));
+                        }
+                    })
+                } catch (error) {
+                    console.log(error);
+                }
+                break;
+            case "Temperature":
+                custom.Success(
+                    customText.bold + customText.colors.cyan + ' | ' + customText.end +
+                    customText.bold + customText.colors.blanco + 'Evento: ' + customText.end +
+                    customText.colors.blanco + data.event + customText.end,
+                    customText.bold + customText.colors.cyan + ' | ' + customText.end
+                );
+                try {
+
+                    clients.forEach(client => {
+                        if (client.username != ws.username && client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify(data));
                         }
                     })
                 } catch (error) {
